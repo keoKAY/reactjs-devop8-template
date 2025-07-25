@@ -3,7 +3,7 @@ on:
     branches: [ "maaster" ]
 
 env:
-  IMAGE_NAME: reactjs-image-fullstack
+  IMAGE_NAME: reactjs-image
 jobs:
   build-and-push:
     runs-on: ubuntu-latest 
