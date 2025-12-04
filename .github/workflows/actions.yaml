@@ -1,7 +1,7 @@
 # set condition for when to run the action files 
 on: 
   push: 
-    branches: ["master34"]
+    branches: ["master"]
 # build docker image , push dockerhub
 env: 
   DOCKER_IMAGE_NAME: k8s-reactjs-dev09
