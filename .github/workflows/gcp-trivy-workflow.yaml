@@ -25,21 +25,49 @@ jobs:
       - name: Build Docker Image
         run: docker build -t ${{ secrets.USERNAME }}/${{env.IMAGE_NAME }}:${{ env.TAG }} .
 
-      - name: Scan the Docker Image with Trivy 
-        id: trivy 
-        uses: aquasecurity/trivy-action@v0.20.0
-        with: 
-          image-ref: ${{ secrets.USERNAME }}/${{env.IMAGE_NAME }}:${{ env.TAG }} 
-          format: table 
-          exit-code: 1 
-          severity: CRITICAL,HIGH
-
-      - name: Send Telegram Alert if failed 
-        if: failure() 
+      # - name: Scan the Docker Image with Trivy 
+      #   id: trivy 
+      #   uses: aquasecurity/trivy-action@v0.20.0
+      #   with: 
+      #     image-ref: ${{ secrets.USERNAME }}/${{env.IMAGE_NAME }}:${{ env.TAG }} 
+      #     format: table 
+      #     exit-code: 1 
+      #     severity: CRITICAL,HIGH
+      - name: Run Trivy scan and save report
+        id: trivy
         run: |
+          trivy image \
+            --format json \
+            --output trivy-report.json \
+            --severity CRITICAL,HIGH \
+            ${{ secrets.USERNAME }}/${{ env.IMAGE_NAME }}:$TAG || true
+
+      - name: Parse vulnerabilities
+        id: parse
+        run: |
+          CRITICAL_COUNT=$(jq '[.Results[].Vulnerabilities[]? | select(.Severity=="CRITICAL")] | length' trivy-report.json)
+          HIGH_COUNT=$(jq '[.Results[].Vulnerabilities[]? | select(.Severity=="HIGH")] | length' trivy-report.json)
+
+          echo "CRITICAL=$CRITICAL_COUNT" >> $GITHUB_ENV
+          echo "HIGH=$HIGH_COUNT" >> $GITHUB_ENV
+
+      - name: Send Telegram Report
+        if: env.CRITICAL != '0' || env.HIGH != '0'
+        run: |
+          MESSAGE="🚨 Docker Scan Failed\n\nCritical: $CRITICAL\nHigh: $HIGH\nImage: ${{ env.IMAGE_NAME }}:$TAG"
+
           curl -s -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage \
-          -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
-          -d text="🚨 Docker Image Scan FAILED! Vulnerabilities detected."
+            -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
+            -d text="$MESSAGE"
+      - name: Fail if vulnerabilities found
+        if: env.CRITICAL != '0' || env.HIGH != '0'
+        run: exit 1
+      # - name: Send Telegram Alert if failed 
+      #   if: failure() 
+      #   run: |
+      #     curl -s -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage \
+      #     -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
+      #     -d text="🚨 Docker Image Scan FAILED! Vulnerabilities detected."
 
       - name: Push the Docker image 
         if: success()
