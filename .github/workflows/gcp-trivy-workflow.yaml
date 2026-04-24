@@ -24,10 +24,13 @@ jobs:
           args: >
             -Dsonar.projectKey=${{ env.IMAGE_NAME }}
             -Dsonar.sources=. 
+            -Dsonar.working.directory=.scannerwork
 
       - name: SonarQube Quality Gate Check
         id: sonarqube-quality-gate-check
         uses: sonarsource/sonarqube-quality-gate-action@master
+        with: 
+          scanMetadataReportFile: .scannerwork/report-task.txt
         timeout-minutes: 5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
