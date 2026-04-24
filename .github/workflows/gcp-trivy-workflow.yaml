@@ -16,7 +16,7 @@ jobs:
         with:   
           fetch-depth: 0 # Shallow clone should be disable for the better relevancy of analysis 
       - name: Sonarqube Scan 
-        uses: sonarsource/sonarqube-scan-action@master
+        uses: sonarsource/sonarqube-scan-action@v3.0.0
         env: 
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}  
@@ -24,7 +24,7 @@ jobs:
           args: >
             -Dsonar.projectKey=${{ env.IMAGE_NAME }}
             -Dsonar.sources=. 
-            -Dsonar.working.directory=.scannerwork
+          #  -Dsonar.working.directory=.scannerwork
 
       - name: SonarQube Quality Gate Check
         id: sonarqube-quality-gate-check
@@ -34,6 +34,7 @@ jobs:
         timeout-minutes: 5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }} 
       # 3. ADDED: Send Telegram if SonarQube Fails
       - name: Send Telegram SonarQube Failure
         if: failure() && steps.sonarqube-quality-gate-check.outcome == 'failure'
