@@ -26,7 +26,8 @@ jobs:
             -Dsonar.sources=. 
             -Dsonar.branch.name=${{ github.ref_name }}
             -Dsonar.working.directory=.scannerwork
-
+      - name: Archive Sonar Reports 
+        run: cat .scannerwork/report-task.txt
       - name: SonarQube Quality Gate Check
         id: sonarqube-quality-gate-check
         uses: sonarsource/sonarqube-quality-gate-action@v1.1.0
