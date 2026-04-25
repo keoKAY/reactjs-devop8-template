@@ -24,14 +24,14 @@ jobs:
           args: >
             -Dsonar.projectKey=${{ env.IMAGE_NAME }}
             -Dsonar.sources=. 
-            -Dsonar.branch.name=master
-          #  -Dsonar.working.directory=.scannerwork
+            -Dsonar.branch.name=${{ github.ref_name }}
+            -Dsonar.working.directory=.scannerwork
 
       - name: SonarQube Quality Gate Check
         id: sonarqube-quality-gate-check
-        uses: sonarsource/sonarqube-quality-gate-action@master
-        # with: 
-        #   scanMetadataReportFile: .scannerwork/report-task.txt
+        uses: sonarsource/sonarqube-quality-gate-action@v1.1.0
+        with: 
+          scanMetadataReportFile: .scannerwork/report-task.txt
         timeout-minutes: 5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
