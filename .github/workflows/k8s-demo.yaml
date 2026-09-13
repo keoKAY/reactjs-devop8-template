@@ -1,0 +1,36 @@
+# condition to trigger the pipeline 
+on: 
+  push: 
+    branches: ["master"]
+env: 
+  IMAGE_NAME: reactjs-g12-k8s
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest 
+    environment: K8S_ENV
+    steps: 
+      - name: Checkout Code 
+        uses: actions/checkout@v3
+        with:   
+          fetch-depth: 0 # Shallow clone should be disable for the better relevancy of analysis     
+      - name: Use with SHA 
+        run: | 
+          echo "TAG=${GITHUB_SHA::8}" >> $GITHUB_ENV
+      - name: Show the TAGS values
+        run: |
+          echo "TAG value is : ${{ env.TAG }}"
+      - name: Login to Docker Registry 
+        run: |
+          echo "${{ secrets.PASSWORD }}" | docker login -u ${{ secrets.USERNAME }} --password-stdin
+      - name: Build Docker Image
+        run: docker build -t ${{ secrets.USERNAME }}/${{env.IMAGE_NAME }}:${{ env.TAG }} -f prod.Dockerfile  .
+
+      - name: Push the Docker image 
+        if: success()
+        run: |
+          docker push ${{ secrets.USERNAME }}/${{env.IMAGE_NAME }}:${{ env.TAG }}
+      - name: Logout from the Registry
+        if: always()
+        run: |
+          docker logout 
+  
