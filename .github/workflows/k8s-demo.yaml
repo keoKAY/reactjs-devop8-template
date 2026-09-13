@@ -1,7 +1,8 @@
 # condition to trigger the pipeline 
+# DEVOPS-G12
 on: 
   push: 
-    branches: ["master"]
+    branches: ["NON-EXISTENCE"]
 env: 
   IMAGE_NAME: reactjs-g12-k8s
   HELM_REPO: keoKAY/demo-argocd-gitops-g12
